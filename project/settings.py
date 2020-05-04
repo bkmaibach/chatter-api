@@ -54,10 +54,18 @@ INSTALLED_APPS = [
     'apps.user',
     'apps.mail',
 
-    # ___CHANGEME___
-    # Example apps
-    'apps.workerexample',
+    'channels'
+    # 'chatter'
 ]
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -75,7 +83,7 @@ ROOT_URLCONF = 'project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), os.path.join(BASE_DIR, 'chatter', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -89,6 +97,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'project.wsgi.application'
+ASGI_APPLICATION = "project.routing.application"
 
 if ENV in [STAGING, PRODUCTION]:
     import dj_database_url
@@ -99,9 +108,9 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'django',  # ___CHANGEME___
-            'USER': 'postgres',
-            'PASSWORD': 'postgres'
+            'NAME': 'chatter',
+            'USER': 'django',
+            'PASSWORD': 'P@ssword1'
         },
     }
 

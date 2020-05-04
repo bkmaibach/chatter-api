@@ -2,6 +2,7 @@ from django.conf import settings
 from django.conf.urls import url, include
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.urls import path
 
 from .views import api_root
 
@@ -19,11 +20,8 @@ urlpatterns = [
     url(r'^', include('apps.socialmedia.urls')),
     url(r'^', include('apps.user.urls')),
 
-    # ___CHANGEME___
-    # Routes for example apps
-    url(r'^', include('apps.proxyexample.urls')),
-    url(r'^', include('apps.workerexample.urls')),
-    url(r'^', include('apps.logging.endpoint-example')),
+    # Routes for chatter app
+    path('chat/', include('chatter.urls')),
 
     # Browsable API
     url(r'^api/$', api_root, name='index'),
