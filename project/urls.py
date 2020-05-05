@@ -21,7 +21,7 @@ urlpatterns = [
     url(r'^', include('apps.user.urls')),
 
     # Routes for chatter app
-    path('chat/', include('chatter.urls')),
+    path('chat/', include('apps.chatter.urls')),
 
     # Browsable API
     url(r'^api/$', api_root, name='index'),

@@ -53,9 +53,9 @@ INSTALLED_APPS = [
     'apps.logging',
     'apps.user',
     'apps.mail',
-
+    'apps.chatter',
     'channels'
-    # 'chatter'
+
 ]
 
 CHANNEL_LAYERS = {
@@ -97,7 +97,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'project.wsgi.application'
-ASGI_APPLICATION = "project.routing.application"
+ASGI_APPLICATION = 'project.routing.application'
 
 if ENV in [STAGING, PRODUCTION]:
     import dj_database_url

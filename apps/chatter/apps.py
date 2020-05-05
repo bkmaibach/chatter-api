@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class ChatterConfig(AppConfig):
-    name = 'chatter'
+    name = 'apps.chatter'
