@@ -29,6 +29,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))).replace('
 SECRET_KEY = get('SECRET_KEY')
 DEBUG = False if ENV == PRODUCTION else True
 ALLOWED_HOSTS = get('ALLOWED_HOSTS')
+REDIS_HOST = get('REDIS_HOST')
+REDIS_PORT = get('REDIS_PORT')
 
 AUTH_USER_MODEL = 'user.User'
 
@@ -53,18 +55,25 @@ INSTALLED_APPS = [
     'apps.logging',
     'apps.user',
     'apps.mail',
+    # WEBSOCKETS - The necessary apps
     'apps.chatter',
     'channels'
 
 ]
 
+# WEBSOCKETS - RedisChannelLayer should be used in production - But will break in tests.
+# In development use InMemoryChannelLayer
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
-        },
-    },
+            "hosts": [(REDIS_HOST, REDIS_PORT)],
+        }
+     }
+} if ENV == PRODUCTION else {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
 }
 
 MIDDLEWARE = [
@@ -97,6 +106,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'project.wsgi.application'
+# WEBSOCKETS - This is an important setting to add:
 ASGI_APPLICATION = 'project.routing.application'
 
 if ENV in [STAGING, PRODUCTION]:

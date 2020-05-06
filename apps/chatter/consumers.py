@@ -2,11 +2,14 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 
+# WEBSOCKETS - The consumer is like the view for websockets.
+# It is registered in the app routing.py
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         print('CONNECTION RECEIVED')
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = 'chat_%s' % self.room_name
+        self.room_id = self.scope['url_route']['kwargs']['room_id']
+        self.room_group_name = 'chat_%s' % self.room_id
+        print("ROOM GROUP NAME " + self.room_group_name)
 
         await self.channel_layer.group_add(
             self.room_group_name,
