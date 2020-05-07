@@ -38,7 +38,6 @@ class UserList(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = (permissions.IsAdminUser,)
 
-
 class UserLogin(ObtainAuthToken):
     serializer_class = CustomAuthTokenSerializer
 

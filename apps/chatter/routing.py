@@ -1,6 +1,5 @@
 # chatter/routing.py
 from django.urls import re_path
-
 from . import consumers
 
 # WEBSOCKETS - The routing is kind of like the urls.py but for a different protocol
