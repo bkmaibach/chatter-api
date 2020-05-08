@@ -44,6 +44,8 @@ jobs:
         GOOGLE_SUCCESSFUL_LOGIN_URL: "test"
         GOOGLE_PROJECT_ID: "test"
         GOOGLE_REDIRECT_URI: "test"
+        REDIS_HOST: "127.0.0.1"
+        REDIS_PORT: "6379"
     steps:
     - uses: actions/checkout@v2
     - name: test

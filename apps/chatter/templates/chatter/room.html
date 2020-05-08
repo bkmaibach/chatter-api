@@ -1,4 +1,9 @@
 <!-- chat/templates/chat/room -->
+{% comment %}
+WEBSOCKETS - Here is a test template that demonstrates how to connect the frontend with vanilla JS 
+These have their own views and URL routes to be used for demo/debug/testing puposes
+{% endcomment %}
+
 <html>
     <head>
         <meta charset="utf-8">
@@ -39,6 +44,10 @@
             document.querySelector('#chat-message-submit').onclick = function(e) {
                 const messageInputDom = document.querySelector('#chat-message-input');
                 const message = messageInputDom.value;
+                console.log("SENDING:")
+                console.log(JSON.stringify({
+                    message
+                }))
                 chatSocket.send(JSON.stringify({
                     message
                 }));
