@@ -22,10 +22,10 @@ def create_message(author, text, room):
 # It is registered in the app routing.py
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        # print('CONNECTION RECEIVED')
+        print('CONNECTION RECEIVED')
         self.room_id = self.scope['url_route']['kwargs']['room_id']
         self.room_group_name = 'chat_{0}'.format(self.room_id)
-        # print("ROOM GROUP NAME " + self.room_group_name)
+        print("ROOM GROUP NAME " + self.room_group_name)
 
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -57,12 +57,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.send_message(content)
 
     async def new_message(self, data):
-        # print('NEW_MESSAGE command received')
+        print('NEW_MESSAGE command received')
 
         text = data['text']
         user = await get_user(data['token'])
         # print("GOT USER: " + str(user))
-        # # print("SELF SCOPE IS: " + str(self.scope))
+        # print("SELF SCOPE IS: " + str(self.scope))
         message = await create_message(user, text, self.room_id)
         
         content = {
@@ -78,7 +78,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     }
 
     async def receive(self, text_data):
-        # print('IN RECEIVE WITH TEXT DATA ' + text_data)
+        print('IN RECEIVE WITH TEXT DATA ' + text_data)
         data = json.loads(text_data)
         await self.commands[data['command']](self, data)
 
@@ -93,6 +93,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'message': message
             }
         )
+    # Receive message from room group
+    async def chat_message(self, event):
+        message = event['message']
+        print('IN CHAT MESSAGE WITH ' + json.dumps(message))
+        # Send message to WebSocket
+        await self.send(text_data=json.dumps(message))
 
     def message_to_json(self, message):
         messageJson = {
@@ -109,11 +115,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             result.append(self.message_to_json(message))
         return result
 
-    # Receive message from room group
-    async def chat_message(self, event):
-        message = event['message']
-        # Send message to WebSocket
-        self.send(text_data=json.dumps(message))
 
 
 
