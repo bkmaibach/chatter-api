@@ -10,8 +10,8 @@ class Room(models.Model):
 
 class Message(models.Model):
     text = models.CharField(max_length=255)
-    timestamp = models.DateTimeField(auto_now_add=True)
-    user_profile = models.ForeignKey(
+    timestamp = models.DateTimeField(auto_now_add=True, blank=True)
+    author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.DO_NOTHING
     )
@@ -23,7 +23,10 @@ class Message(models.Model):
 
     def was_published_recently(self):
         return timezone.now() - datetime.timedelta(days=1) <= self.timstamp <= timezone.now()
+
+    def last_50_messages(self, room_id):
+        return Message.objects.order_by('-timestamp').all().filter(room_id=room_id)[:50]
     
     def __str__(self):
         """Return the model as a string"""
-        return self.timestamp + " - " + self.text
+        return str(self.timestamp) + " - " + self.text
