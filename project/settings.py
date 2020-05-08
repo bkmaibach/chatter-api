@@ -78,7 +78,6 @@ else:
             'BACKEND': 'channels.layers.InMemoryChannelLayer'
         }
     }
-        
 
 MIDDLEWARE = [
 
