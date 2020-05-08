@@ -8,6 +8,7 @@ from rest_framework.authtoken.models import Token
 # To attempt to activate this dumpster fire:
 # put TokenAuthMiddlewareStack in place of AuthMiddlewareStack
 # In project level routing.py
+# Currently gives error that scope['user'] is NoneType
 @database_sync_to_async
 def get_user(query_string):
     try:
