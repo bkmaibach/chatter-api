@@ -63,18 +63,21 @@ INSTALLED_APPS = [
 
 # WEBSOCKETS - RedisChannelLayer should be used in production - But will break in tests.
 # In development use InMemoryChannelLayer
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [(REDIS_HOST, REDIS_PORT)],
+if ENV == PRODUCTION:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [(REDIS_HOST, REDIS_PORT)],
+            }
         }
-     }
-} if ENV == PRODUCTION else {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer'
     }
-}
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer'
+        }
+    }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
