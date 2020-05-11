@@ -5,6 +5,7 @@ from rest_framework.authtoken.models import Token
 from channels.db import database_sync_to_async
 from .models import Message
 from .models import Room
+from asgiref.sync import sync_to_async
 
 @database_sync_to_async
 def get_user(token_key):
@@ -15,8 +16,12 @@ def get_user(token_key):
         return AnonymousUser()
 
 @database_sync_to_async
-def create_message(author, text, room):
-    return Message.objects.create(author=author, text=text, room_id=int(room))
+def create_message(author, text, room_id):
+    return Message.objects.create(author=author, text=text, room_id=int(room_id))
+
+# @database_sync_to_async
+def get_latest_messages(room_id):
+    return sync_to_async(Message.last_50_messages, thread_sensitive=True)(room_id=int(room_id))
 
 # WEBSOCKETS - The consumer is like the view for websockets.
 # It is registered in the app routing.py
@@ -25,7 +30,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         print('CONNECTION RECEIVED')
         self.room_id = self.scope['url_route']['kwargs']['room_id']
         self.room_group_name = 'chat_{0}'.format(self.room_id)
-        print("ROOM GROUP NAME " + self.room_group_name)
+        # print("ROOM GROUP NAME " + self.room_group_name)
 
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -33,8 +38,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         await self.accept()
 
-    async def disconnect(self):
-        # print('CONNECTION LOST')
+    async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -45,20 +49,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
         content = {
             'command': 'INIT_CHAT'
         }
-        content['success'] = 'Chatting success with username: ' + str(user)
-        self.send_message(content)
+        content['success'] = str(user) + ' has joined the room'
+        await self.send_message(content)
 
     async def fetch_messages(self, data):
-        messages = Message.last_50_messages(self.room_id)
+        print('Sending latest messages')
+        messages = await get_latest_messages(self.room_id)
         content = {
-            'command': 'messages',
+            'command': 'MESSAGES',
             'messages': self.messages_to_json(messages)
         }
-        self.send_message(content)
+        await self.send_message(content)
 
     async def new_message(self, data):
-        print('NEW_MESSAGE command received')
-
+        # print('NEW_MESSAGE command received')
+        # print(data)
         text = data['text']
         user = await get_user(data['token'])
         # print("GOT USER: " + str(user))
@@ -78,14 +83,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
     }
 
     async def receive(self, text_data):
-        print('IN RECEIVE WITH TEXT DATA ' + text_data)
+        # print('IN RECEIVE WITH TEXT DATA ' + text_data)
         data = json.loads(text_data)
         await self.commands[data['command']](self, data)
 
+    async def send_message(self, message):
+        print('Sending message: ' + json.dumps(message))
+        await self.send(text_data=json.dumps(message))
 
     async def send_chat_message(self, message):
         # Send message to room group
-        print('GROUP SENDING MESSAGE ' + str(message))
+        # print('GROUP SENDING MESSAGE ' + str(message))
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -96,7 +104,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Receive message from room group
     async def chat_message(self, event):
         message = event['message']
-        print('IN CHAT MESSAGE WITH ' + json.dumps(message))
+        # print('IN CHAT MESSAGE WITH ' + json.dumps(message))
         # Send message to WebSocket
         await self.send(text_data=json.dumps(message))
 

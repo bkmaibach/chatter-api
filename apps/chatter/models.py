@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
+from channels.db import database_sync_to_async
 
 class Room(models.Model):
     name = models.CharField(max_length=80)
@@ -24,7 +25,7 @@ class Message(models.Model):
     def was_published_recently(self):
         return timezone.now() - datetime.timedelta(days=1) <= self.timstamp <= timezone.now()
 
-    def last_50_messages(self, room_id):
+    def last_50_messages(room_id):
         return Message.objects.order_by('-timestamp').all().filter(room_id=room_id)[:50]
     
     def __str__(self):

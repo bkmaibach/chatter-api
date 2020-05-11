@@ -34,6 +34,11 @@ REDIS_PORT = get('REDIS_PORT')
 
 AUTH_USER_MODEL = 'user.User'
 
+# Attempts to get the program to work without this set have not yielded success
+# Specifically when the chatter consumer.py tries to obtain the 50 latest messages for a room
+# Using database_sync_to_async or asgiref sync_to_async wwrappers do not work in this case.
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
