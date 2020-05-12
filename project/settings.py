@@ -213,9 +213,11 @@ REST_FRAMEWORK = {
         'djangorestframework_camel_case.parser.CamelCaseJSONParser',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        # 'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
         # Only needed for DRF browsable API. Unfortunately, it can interfere with mobile app API requests.
-        'rest_framework.authentication.SessionAuthentication',
+        # The following should be used for a production ready WebSocket server running Django Channels
+        # However, it is not currently compatible with our current authentication model
+        # 'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
