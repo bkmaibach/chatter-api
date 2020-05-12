@@ -2,6 +2,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import AnonymousUser
 from channels.db import database_sync_to_async
 from .models import Message
 from .models import Room
@@ -15,12 +16,20 @@ def get_user(token_key):
         return AnonymousUser()
 
 @database_sync_to_async
-def create_message(author, text, room):
-    return Message.objects.create(author=author, text=text, room_id=int(room))
+def create_message(author, text, room_id):
+    return Message.objects.create(author=author, text=text, room_id=room_id)
+
+# @database_sync_to_async
+def get_latest_messages(room_id):
+    return sync_to_async(Message.last_50_messages, thread_sensitive=True)(room_id=room_id)
 
 # WEBSOCKETS - The consumer is like the view for websockets.
 # It is registered in the app routing.py
 class ChatConsumer(AsyncWebsocketConsumer):
+    INIT_CHAT = 'INIT_CHAT'
+    FETCH_MESSAGES = 'FETCH_MESSAGES'
+    NEW_MESSAGE = 'NEW_MESSAGE'
+    
     async def connect(self):
         print('CONNECTION RECEIVED')
         self.room_id = self.scope['url_route']['kwargs']['room_id']
@@ -43,7 +52,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def init_chat(self, data):
         user = await get_user(data['token'])
         content = {
-            'command': 'INIT_CHAT'
+            'command': INIT_CHAT
         }
         content['success'] = 'Chatting success with username: ' + str(user)
         self.send_message(content)
@@ -51,7 +60,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def fetch_messages(self, data):
         messages = Message.last_50_messages(self.room_id)
         content = {
-            'command': 'messages',
+            'command': MESSAGES,
             'messages': self.messages_to_json(messages)
         }
         self.send_message(content)
@@ -66,21 +75,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = await create_message(user, text, self.room_id)
         
         content = {
-            'command': 'NEW_MESSAGE',
+            'command': NEW_MESSAGE,
             'message': self.message_to_json(message)
         }
         await self.send_chat_message(content)
 
     commands = {
-        'INIT_CHAT': init_chat,
-        'FETCH_MESSAGES': fetch_messages,
-        'NEW_MESSAGE': new_message
+        INIT_CHAT: init_chat,
+        FETCH_MESSAGES: fetch_messages,
+        NEW_MESSAGE: new_message
     }
 
     async def receive(self, text_data):
         print('IN RECEIVE WITH TEXT DATA ' + text_data)
         data = json.loads(text_data)
-        await self.commands[data['command']](self, data)
+        if data['commnd'] in self.commands:
+            await self.commands[data['command']](self, data)
+        else:
+            print('The given command is invalid!')
+            raise Exception(data['commnd'])
 
 
     async def send_chat_message(self, message):
