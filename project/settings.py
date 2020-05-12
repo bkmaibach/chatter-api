@@ -2,6 +2,8 @@ import logging.config
 import os
 import sys
 
+# Currently unable to get async to work without this (not production ready):
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 def get(variable):
     """
