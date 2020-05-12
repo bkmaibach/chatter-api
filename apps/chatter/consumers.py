@@ -30,6 +30,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     FETCH_MESSAGES = 'FETCH_MESSAGES'
     NEW_MESSAGE = 'NEW_MESSAGE'
     MESSAGES = 'MESSAGES'
+    ERROR = 'ERROR'
     
     async def connect(self):
         print('CONNECTION RECEIVED')
