@@ -65,6 +65,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'command': self.MESSAGES,
             'messages': self.messages_to_json(messages)
         }
+        print('SENDING CONTENT', content)
         await self.send_message(content)
 
     async def new_message(self, data):
@@ -87,7 +88,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'command': self.ERROR,
             'error': error
         }
-        self.send_message(content)
+        await self.send_message(content)
 
     commands = {
         INIT_CHAT: init_chat,
@@ -130,7 +131,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(message))
 
     async def send_message(self, message):
-        self.send(text_data=json.dumps(message))
+        await self.send(text_data=json.dumps(message))
 
     def message_to_json(self, message):
         messageJson = {
