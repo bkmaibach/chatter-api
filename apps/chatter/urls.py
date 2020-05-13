@@ -10,6 +10,4 @@ app_name = 'chatter'
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('test/', views.index, name='index'),
-    path('test/<str:room_name>/', views.room, name='room')
 ]

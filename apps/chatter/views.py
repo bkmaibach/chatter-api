@@ -7,17 +7,10 @@ from rest_framework.authentication import TokenAuthentication
 
 class RoomViewSet(viewsets.ModelViewSet):
     """API endpoint that allows rooms to be viewed or edited."""
+    authentication_classes = (TokenAuthentication,)
     queryset = Room.objects.all().order_by('name')
     serializer_class = RoomSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-def index(request):
-    return render(request, 'chatter/index.html')
-
-def room(request, room_name):
-    return render(request, 'chatter/room.html', {
-        'room_name': room_name
-    })
 
 # class RoomMessageViewSet(viewsets.ModelViewSet):
 #     """Handles creating reading and updating Messages"""
