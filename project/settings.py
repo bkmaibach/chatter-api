@@ -2,6 +2,8 @@ import logging.config
 import os
 import sys
 
+# Currently unable to get async to work without this (not production ready):
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 def get(variable):
     """
@@ -220,6 +222,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
         # Only needed for DRF browsable API. Unfortunately, it can interfere with mobile app API requests.
+        # The following should be used for a production ready WebSocket server running Django Channels
+        # However, it is not currently compatible with our current authentication model
         # 'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (

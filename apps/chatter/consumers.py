@@ -2,6 +2,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import AnonymousUser
 from channels.db import database_sync_to_async
 from .models import Message
 from .models import Room
@@ -20,12 +21,18 @@ def create_message(author, text, room_id):
     return Message.objects.create(author=author, text=text, room_id=int(room_id))
 
 # @database_sync_to_async
-def get_latest_messages(room_id):
-    return sync_to_async(Message.last_50_messages, thread_sensitive=True)(room_id=int(room_id))
+# def get_latest_messages(room_id):
+#     return sync_to_async(Message.last_50_messages, thread_sensitive=True)(room_id=room_id)
 
 # WEBSOCKETS - The consumer is like the view for websockets.
 # It is registered in the app routing.py
 class ChatConsumer(AsyncWebsocketConsumer):
+    INIT_CHAT = 'INIT_CHAT'
+    FETCH_MESSAGES = 'FETCH_MESSAGES'
+    NEW_MESSAGE = 'NEW_MESSAGE'
+    MESSAGES = 'MESSAGES'
+    ERROR = 'ERROR'
+    
     async def connect(self):
         print('CONNECTION RECEIVED')
         self.room_id = self.scope['url_route']['kwargs']['room_id']
@@ -47,16 +54,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def init_chat(self, data):
         user = await get_user(data['token'])
         content = {
-            'command': 'INIT_CHAT'
+            'command': self.INIT_CHAT
         }
         content['success'] = str(user) + ' has joined the room'
         await self.send_message(content)
 
     async def fetch_messages(self, data):
-        print('Sending latest messages')
-        messages = await get_latest_messages(self.room_id)
+        messages = Message.last_50_messages(room_id=self.room_id)
         content = {
-            'command': 'MESSAGES',
+            'command': self.MESSAGES,
             'messages': self.messages_to_json(messages)
         }
         await self.send_message(content)
@@ -71,21 +77,36 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = await create_message(user, text, self.room_id)
         
         content = {
-            'command': 'NEW_MESSAGE',
+            'command': self.NEW_MESSAGE,
             'message': self.message_to_json(message)
         }
         await self.send_chat_message(content)
 
+    async def error_reponse(self, error):
+        content = {
+            'command': self.ERROR,
+            'error': error
+        }
+        self.send_message(content)
+
     commands = {
-        'INIT_CHAT': init_chat,
-        'FETCH_MESSAGES': fetch_messages,
-        'NEW_MESSAGE': new_message
+        INIT_CHAT: init_chat,
+        FETCH_MESSAGES: fetch_messages,
+        NEW_MESSAGE: new_message
     }
 
     async def receive(self, text_data):
         # print('IN RECEIVE WITH TEXT DATA ' + text_data)
         data = json.loads(text_data)
-        await self.commands[data['command']](self, data)
+        if data['command'] == ChatConsumer.INIT_CHAT:
+            await self.init_chat(data)
+        elif data['command'] == ChatConsumer.FETCH_MESSAGES:
+            await self.fetch_messages(data)
+        elif data['command'] == ChatConsumer.NEW_MESSAGE:
+            await self.new_message(data)
+        else:
+            await self.error_reponse('The command \"{0}\" could not be recognized'
+                .format(data['command']))
 
     async def send_message(self, message):
         print('Sending message: ' + json.dumps(message))
@@ -107,6 +128,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # print('IN CHAT MESSAGE WITH ' + json.dumps(message))
         # Send message to WebSocket
         await self.send(text_data=json.dumps(message))
+
+    async def send_message(self, message):
+        self.send(text_data=json.dumps(message))
 
     def message_to_json(self, message):
         messageJson = {
