@@ -130,8 +130,8 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': 'chatter',
-            'USER': 'django',
-            'PASSWORD': 'P@ssword1'
+            'USER': 'postgres',
+            'PASSWORD': 'postgres'
         },
     }
 

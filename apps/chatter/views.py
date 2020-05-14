@@ -10,7 +10,7 @@ class RoomViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication,)
     queryset = Room.objects.all().order_by('name')
     serializer_class = RoomSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = (permissions.IsAuthenticated,)
 
 # class RoomMessageViewSet(viewsets.ModelViewSet):
 #     """Handles creating reading and updating Messages"""
