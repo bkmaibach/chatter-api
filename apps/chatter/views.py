@@ -11,14 +11,3 @@ class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all().order_by('name')
     serializer_class = RoomSerializer
     permission_classes = (permissions.IsAuthenticated,)
-
-# class RoomMessageViewSet(viewsets.ModelViewSet):
-#     """Handles creating reading and updating Messages"""
-#     authentication_classes = (TokenAuthentication,)
-#     serializer_class = serializers.MessageSerializer
-#     queryset = models.Messages.objects.all()
-#     permission_classes = (permissions.SendOwnMessages, IsAuthenticated)
-
-#     def perform_create(self, serializer):
-#         """Sets the UserProfile to the logged in user"""
-#         serializer.save(user_profile=self.request.user)

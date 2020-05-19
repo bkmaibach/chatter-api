@@ -1,6 +1,6 @@
 # from rest_framework import permissions
 
-class SendOwnMessages(permissions.BasePermission):
+class SendOwnEntries(permissions.BasePermission):
     """Allow users to only send messages as themself"""
 
     def has_object_permissions(self, request, view, obj):
