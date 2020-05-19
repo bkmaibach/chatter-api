@@ -11,3 +11,4 @@ class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all().order_by('name')
     serializer_class = RoomSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    
