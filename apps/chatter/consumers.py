@@ -7,6 +7,8 @@ from channels.db import database_sync_to_async
 from .models import Entry
 from .models import Room
 from asgiref.sync import sync_to_async
+from .serializers import MessageSerializer
+from .serializers import EntrySerializer
 
 @database_sync_to_async
 def get_user(token_key):
@@ -97,17 +99,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
     }
 
     async def receive(self, text_data):
-        # print('IN RECEIVE WITH MESSAGE STRING ' + text_data)
+        print('IN RECEIVE WITH MESSAGE STRING ' + text_data)
         message = json.loads(text_data)
-        if message['command'] == ChatConsumer.INIT_CHAT:
-            await self.init_chat(message)
-        elif message['command'] == ChatConsumer.FETCH_ENTRIES:
-            await self.fetch_entries(message)
-        elif message['command'] == ChatConsumer.NEW_ENTRY:
-            await self.new_entry(message)
+        message_serializer = MessageSerializer(data=message)
+
+        if message_serializer.is_valid():
+            print('VALID SERIALIZER: ', message_serializer.validated_data)
+            validMessage = message_serializer.validated_data
+            if validMessage['command'] == ChatConsumer.INIT_CHAT:
+                await self.init_chat(validMessage)
+            elif validMessage['command'] == ChatConsumer.FETCH_ENTRIES:
+                await self.fetch_entries(validMessage)
+            elif validMessage['command'] == ChatConsumer.NEW_ENTRY:
+                await self.new_entry(validMessage)
+            else:
+                await self.error_reponse('No procedure is available for command \"{0}\"'
+                    .format(validMessage['command']))
         else:
-            await self.error_reponse('The command \"{0}\" could not be recognized'
-                .format(message['command']))
+            await self.error_reponse('The data sent could not be recognized')
+            print('INVALID SERIALIZER: ', message_serializer.errors)
+        
 
     async def send_message(self, message):
         print('Sending message: ' + json.dumps(message))
