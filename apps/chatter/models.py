@@ -1,10 +1,10 @@
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
-from channels.db import database_sync_to_async
 
 class Room(models.Model):
     name = models.CharField(max_length=80)
+    password_hash = models.CharField(max_length=255, required=False)
 
     def __str__(self):
         return self.name

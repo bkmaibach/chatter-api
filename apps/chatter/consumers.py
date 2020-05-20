@@ -1,9 +1,11 @@
 # chat/consumers.py
 import json
+
 from channels.generic.websocket import AsyncWebsocketConsumer
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import AnonymousUser
 from channels.db import database_sync_to_async
+
 from .models import Entry
 from .models import Room
 from asgiref.sync import sync_to_async
@@ -139,9 +141,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = event['message']
         # print('IN CHAT MESSAGE WITH ' + json.dumps(message))
         # Send message to WebSocket
-        await self.send(text_data=json.dumps(message))
-
-    async def send_message(self, message):
         await self.send(text_data=json.dumps(message))
 
     def entry_to_json(self, entry):

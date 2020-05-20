@@ -1,10 +1,3 @@
-class Entry(object):
-    def __init__(self, text, timestamp, author, room):
-        self.text = text
-        self.timestamp = timestamp
-        self.author = author
-        self.room = room
-
 class Message(object):
     def __init__(self, command, **kwargs):
         self.command = command
