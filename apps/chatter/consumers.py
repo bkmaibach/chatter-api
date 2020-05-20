@@ -123,7 +123,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         
 
     async def send_message(self, message):
-        print('Sending message: ' + json.dumps(message))
+        # print('Sending message: ' + json.dumps(message))
         await self.send(text_data=json.dumps(message))
 
     async def send_chat_message(self, message):

@@ -4,7 +4,7 @@ from django.conf import settings
 
 class Room(models.Model):
     name = models.CharField(max_length=80)
-    password_hash = models.CharField(max_length=255, required=False)
+    password_hash = models.CharField(max_length=255)
 
     def __str__(self):
         return self.name
