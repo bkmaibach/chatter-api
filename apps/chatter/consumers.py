@@ -34,7 +34,7 @@ def check_room_password(room_id, password):
     hashed_password = Room.objects.get(id=room_id).password
     print('GOT HASHED PASSWORD ', hashed_password)
     print('CHECKING PASSWORD ', password)
-    if hashed_password is '':
+    if not hashed_password:
         return True
     else:
         return check_password(password, hashed_password)
