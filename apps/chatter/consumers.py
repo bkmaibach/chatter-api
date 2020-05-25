@@ -4,6 +4,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.hashers import check_password
 from channels.db import database_sync_to_async
 
 from .models import Entry
@@ -28,6 +29,16 @@ def create_entry(author, text, room_id):
 # def get_latest_messages(room_id):
 #     return sync_to_async(Entry.last_50_messages, thread_sensitive=True)(room_id=room_id)
 
+@database_sync_to_async
+def check_room_password(room_id, password):
+    hashed_password = Room.objects.get(id=room_id).password
+    print('GOT HASHED PASSWORD ', hashed_password)
+    print('CHECKING PASSWORD ', password)
+    if not hashed_password:
+        return True
+    else:
+        return check_password(password, hashed_password)
+
 # WEBSOCKETS - The consumer is like the view for websockets.
 # It is registered in the app routing.py
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -36,6 +47,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     NEW_ENTRY = 'NEW_ENTRY'
     ENTRIES = 'ENTRIES'
     ERROR = 'ERROR'
+    INIT_RESPONSE = 'INIT_RESPONSE'
     
     async def connect(self):
         print('CONNECTION RECEIVED')
@@ -55,12 +67,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
-    async def init_chat(self, data):
-        user = await get_user(data['token'])
+    async def init_chat(self, isAuthorized):
+        # user = await get_user(data['token'])
         message = {
-            'command': self.INIT_CHAT,
-            'success': '{0} has joined the room'.format(str(user))
+            'command': self.INIT_RESPONSE,
+            'authorized': isAuthorized
         }
+        print('INIT_CHAT RECEIVED, RESPONDING WITH ', message)
         await self.send_message(message)
 
     async def fetch_entries(self, data):
@@ -94,12 +107,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }
         await self.send_message(content)
 
-    commands = {
-        INIT_CHAT: init_chat,
-        FETCH_ENTRIES: fetch_entries,
-        NEW_ENTRY: new_entry
-    }
-
     async def receive(self, text_data):
         print('IN RECEIVE WITH MESSAGE STRING ' + text_data)
         message = json.loads(text_data)
@@ -108,22 +115,30 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if message_serializer.is_valid():
             print('VALID SERIALIZER: ', message_serializer.validated_data)
             validMessage = message_serializer.validated_data
-            if validMessage['command'] == ChatConsumer.INIT_CHAT:
-                await self.init_chat(validMessage)
-            elif validMessage['command'] == ChatConsumer.FETCH_ENTRIES:
-                await self.fetch_entries(validMessage)
-            elif validMessage['command'] == ChatConsumer.NEW_ENTRY:
-                await self.new_entry(validMessage)
+            if 'password' in validMessage:
+                password = validMessage['password']
             else:
-                await self.error_reponse('No procedure is available for command \"{0}\"'
-                    .format(validMessage['command']))
+                password = ''
+            isAuthorized = await check_room_password(self.room_id, password)
+            if validMessage['command'] == ChatConsumer.INIT_CHAT:
+                await self.init_chat(isAuthorized)
+            elif isAuthorized:
+                if validMessage['command'] == ChatConsumer.FETCH_ENTRIES:
+                    await self.fetch_entries(validMessage)
+                elif validMessage['command'] == ChatConsumer.NEW_ENTRY:
+                    await self.new_entry(validMessage)
+                else:
+                    await self.error_reponse('No procedure is available for command \"{0}\"'
+                        .format(validMessage['command']))
+            else:
+                await self.error_reponse('The password was incorrect')
         else:
             await self.error_reponse('The data sent could not be recognized')
             print('INVALID SERIALIZER: ', message_serializer.errors)
         
 
     async def send_message(self, message):
-        print('Sending message: ' + json.dumps(message))
+        # print('Sending message: ' + json.dumps(message))
         await self.send(text_data=json.dumps(message))
 
     async def send_chat_message(self, message):
