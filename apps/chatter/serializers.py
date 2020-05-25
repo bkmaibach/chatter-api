@@ -39,7 +39,7 @@ class MessageSerializer(serializers.Serializer):
     command = serializers.CharField(max_length=32)
     token = serializers.CharField(required=False, min_length=40, max_length=40)
     text = serializers.CharField(required=False, max_length=255)
-    password = serializers.CharField(max_length=255, allow_blank=True)
+    password = serializers.CharField(required=False, max_length=255, allow_blank=True)
     # Not necessary at this end of the API?
     # entries = EntrySerializer(required=False, many=True)
     success = serializers.CharField(required=False, max_length=100)

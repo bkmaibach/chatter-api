@@ -115,7 +115,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if message_serializer.is_valid():
             print('VALID SERIALIZER: ', message_serializer.validated_data)
             validMessage = message_serializer.validated_data
-            password = validMessage['password']
+            if 'password' in validMessage:
+                password = validMessage['password']
+            else:
+                password = ''
             isAuthorized = await check_room_password(self.room_id, password)
             if validMessage['command'] == ChatConsumer.INIT_CHAT:
                 await self.init_chat(isAuthorized)
